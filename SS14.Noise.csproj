@@ -21,6 +21,8 @@
     <DefineConstants>DEBUG;TRACE;X64</DefineConstants>
     <DebugType Condition="'$(AppVeyor)' != 'yes'">portable</DebugType>
     <PlatformTarget>x64</PlatformTarget>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <LangVersion>7.3</LangVersion>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
@@ -46,6 +48,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="src\**\*.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="src\background.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="src\test.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
