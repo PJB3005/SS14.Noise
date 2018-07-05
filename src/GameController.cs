@@ -7,6 +7,9 @@ using OpenTK.Graphics.OpenGL;
 
 namespace SS14.Noise
 {
+    /// <summary>
+    ///     Handles rendering.
+    /// </summary>
     class GameController : GameWindow
     {
         uint VAO;
@@ -14,6 +17,7 @@ namespace SS14.Noise
         uint EBO;
         int ShaderProgram;
         int Texture;
+        readonly Generator NoiseGenerator;
 
         public GameController() : base(800, 600,
                                        GraphicsMode.Default,
@@ -22,6 +26,7 @@ namespace SS14.Noise
                                        DisplayDevice.Default,
                                        3, 3, GraphicsContextFlags.Debug)
         {
+            NoiseGenerator = new Generator();
         }
 
         protected override void OnLoad(EventArgs e)
@@ -41,10 +46,11 @@ namespace SS14.Noise
                 // VBO & EBO.
                 var tri = new float[]
                 {
-                    -1, -1, 0, 1,
-                    1,  -1, 1, 1,
-                    1,   1, 1, 0,
-                    -1,  1, 0, 0,
+                    // Coords  Tex Coords
+                    -1, -1,    0, 1,
+                    1,  -1,    1, 1,
+                    1,   1,    1, 0,
+                    -1,  1,    0, 0,
                 };
 
                 unsafe
@@ -170,7 +176,21 @@ namespace SS14.Noise
 
         void ReloadImage()
         {
-            LoadImageToTexture("src/background.png");
+            var noise = new FastNoise();
+            noise.SetNoiseType(FastNoise.NoiseType.PerlinFractal);
+            using (var bitmap = new Bitmap(800, 600))
+            {
+                for (var x = 0; x < bitmap.Width; x++)
+                    for (var y = 0; y < bitmap.Height; y++)
+                    {
+                        var val = (noise.GetNoise(x, y) + 1) / 2;
+                        var col = Color.FromArgb(255, (int)(val * 255), (int)(val * 255), (int)(val * 255));
+                        bitmap.SetPixel(x, y, col);
+                    }
+
+                LoadBitmapToTexture(bitmap);
+            }
+            //LoadImageToTexture("src/background.png");
         }
 
         void LoadImageToTexture(string path)
@@ -178,25 +198,30 @@ namespace SS14.Noise
             using (var file = File.OpenRead(path))
             using (var img = new Bitmap(file))
             {
-                var data = img.LockBits(new Rectangle(0, 0, img.Width, img.Height),
-                                        System.Drawing.Imaging.ImageLockMode.ReadOnly,
-                                        System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-
-                GL.BindTexture(TextureTarget.Texture2D, Texture);
-                GL.TexImage2D(TextureTarget.Texture2D,
-                              0,
-                              PixelInternalFormat.Rgba,
-                              data.Width,
-                              data.Height,
-                              0,
-                              PixelFormat.Bgra,
-                              PixelType.UnsignedByte,
-                              data.Scan0);
-
-                GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);
-
-                img.UnlockBits(data);
+                LoadBitmapToTexture(img);
             }
+        }
+
+        void LoadBitmapToTexture(Bitmap bitmap)
+        {
+            var data = bitmap.LockBits(new Rectangle(0, 0, bitmap.Width, bitmap.Height),
+                        System.Drawing.Imaging.ImageLockMode.ReadOnly,
+                        System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+
+            GL.BindTexture(TextureTarget.Texture2D, Texture);
+            GL.TexImage2D(TextureTarget.Texture2D,
+                          0,
+                          PixelInternalFormat.Rgba,
+                          data.Width,
+                          data.Height,
+                          0,
+                          PixelFormat.Bgra,
+                          PixelType.UnsignedByte,
+                          data.Scan0);
+
+            GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);
+
+            bitmap.UnlockBits(data);
         }
 
         private void DebugMessage(DebugSource source, DebugType type, int id, DebugSeverity severity, int length, IntPtr message, IntPtr userParam)
