@@ -60,14 +60,8 @@ namespace SS14.Noise
                     -1,  1,    0, 0,
                 };
 
-                unsafe
-                {
-                    // Gotta spare that ONE GL call.
-                    var buffers = stackalloc uint[2];
-                    GL.GenBuffers(2, buffers);
-                    VBO = buffers[0];
-                    EBO = buffers[1];
-                }
+                VBO = (uint)GL.GenBuffer();
+                EBO = (uint)GL.GenBuffer();
                 
                 GL.BindBuffer(BufferTarget.ArrayBuffer, VBO);
                 GL.BufferData(BufferTarget.ArrayBuffer, sizeof(float) * tri.Length, tri, BufferUsageHint.StaticDraw);
@@ -146,15 +140,8 @@ namespace SS14.Noise
             GL.DeleteProgram(ShaderProgram);
             GL.DeleteVertexArray(VAO);
 
-            unsafe
-            {
-                var buffers = stackalloc uint[2]
-                {
-                    VBO,
-                    EBO,
-                };
-                GL.DeleteBuffers(2, buffers);
-            }
+            GL.DeleteBuffer(VBO);
+            GL.DeleteBuffer(EBO);
         }
 
         protected override void OnRenderFrame(FrameEventArgs e)
