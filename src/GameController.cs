@@ -2,6 +2,7 @@ using System;
 using System.Drawing;
 using System.IO;
 using OpenTK;
+using OpenTK.Input;
 using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
 
@@ -18,6 +19,12 @@ namespace SS14.Noise
         int ShaderProgram;
         int Texture;
         readonly Generator NoiseGenerator;
+
+        Vector2 TextureOffset = new Vector2();
+        const float MOVEMENT_SPEED = 200;
+
+        int UniformOffset;
+
 
         public GameController() : base(800, 600,
                                        GraphicsMode.Default,
@@ -103,6 +110,8 @@ namespace SS14.Noise
                 GL.UseProgram(ShaderProgram);
                 GL.DeleteShader(vertexShader);
                 GL.DeleteShader(fragmentShader);
+
+                UniformOffset = GL.GetUniformLocation(ShaderProgram, "texOffset");
             }
 
             { 
@@ -154,11 +163,31 @@ namespace SS14.Noise
 
             GL.Clear(ClearBufferMask.ColorBufferBit);
 
+            var kb = Keyboard.GetState();
+            if (kb.IsKeyDown(Key.Up))
+            {
+                TextureOffset.Y += (float)e.Time * MOVEMENT_SPEED;
+            }
+            else if (kb.IsKeyDown(Key.Down))
+            {
+                TextureOffset.Y -= (float)e.Time * MOVEMENT_SPEED;
+            }
+
+            if (kb.IsKeyDown(Key.Right))
+            {
+                TextureOffset.X += (float)e.Time * MOVEMENT_SPEED;
+            }
+            else if (kb.IsKeyDown(Key.Left))
+            {
+                TextureOffset.X -= (float)e.Time * MOVEMENT_SPEED;
+            }
+
             GL.UseProgram(ShaderProgram);
             GL.ActiveTexture(TextureUnit.Texture0);
             GL.BindTexture(TextureTarget.Texture2D, Texture);
             GL.BindVertexArray(VAO);
             GL.Uniform1(GL.GetUniformLocation(ShaderProgram, "ourTexture"), 0);
+            GL.Uniform2(UniformOffset, new Vector2(TextureOffset.X / Size.Width, TextureOffset.Y / Size.Height));
             GL.DrawElements(PrimitiveType.Triangles, 6, DrawElementsType.UnsignedInt, IntPtr.Zero);
 
             SwapBuffers();
@@ -177,14 +206,18 @@ namespace SS14.Noise
         void ReloadImage()
         {
             var noise = new FastNoise();
+            noise.SetFractalGain(0.3);
+            noise.SetFrequency(0.008);
+            noise.SetFractalOctaves(7);
+            noise.SetFractalType(FastNoise.FractalType.RigidMulti);
             noise.SetNoiseType(FastNoise.NoiseType.PerlinFractal);
             using (var bitmap = new Bitmap(800, 600))
             {
                 for (var x = 0; x < bitmap.Width; x++)
                     for (var y = 0; y < bitmap.Height; y++)
                     {
-                        var val = (noise.GetNoise(x, y) + 1) / 2;
-                        var col = Color.FromArgb(255, (int)(val * 255), (int)(val * 255), (int)(val * 255));
+                        var val = Math.Max(0, (noise.GetNoise(x, y)+0) / 4);
+                        var col = Color.FromArgb(255, 0, 0, (int)(val * 255));
                         bitmap.SetPixel(x, y, col);
                     }
 
@@ -248,10 +281,11 @@ out vec4 FragColor;
 in vec2 uv;
 
 uniform sampler2D ourTexture;
+uniform vec2 texOffset;
 
 void main()
 {
-    FragColor = vec4(texture(ourTexture,uv));
+    FragColor = vec4(texture(ourTexture,uv+texOffset));
 }";
     }
 }
