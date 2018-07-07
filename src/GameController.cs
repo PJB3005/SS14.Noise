@@ -31,7 +31,7 @@ namespace SS14.Noise
                                        "Noise!",
                                        GameWindowFlags.Default,
                                        DisplayDevice.Default,
-                                       3, 3, GraphicsContextFlags.Debug)
+                                       3, 3, GraphicsContextFlags.Default)
         {
             NoiseGenerator = new Generator();
         }
@@ -40,7 +40,7 @@ namespace SS14.Noise
         {
             base.OnLoad(e);
 
-            GL.DebugMessageCallback(DebugMessage, IntPtr.Zero);
+            //GL.DebugMessageCallback(DebugMessage, IntPtr.Zero);
             GL.ClearColor(Color4.Black);
 
             {
@@ -122,12 +122,12 @@ namespace SS14.Noise
                 GL.BindTexture(TextureTarget.Texture2D, Texture);
 
                 int param = (int)TextureWrapMode.Repeat;
-                GL.TextureParameterI((int)All.Texture2D, TextureParameterName.TextureWrapS, ref param);
-                GL.TextureParameterI((int)All.Texture2D, TextureParameterName.TextureWrapT, ref param);
+                GL.TexParameterI(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, ref param);
+                GL.TexParameterI(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, ref param);
 
                 param = (int)TextureMagFilter.Nearest;
-                GL.TextureParameterI((int)All.Texture2D, TextureParameterName.TextureMagFilter, ref param);
-                GL.TextureParameterI((int)All.Texture2D, TextureParameterName.TextureMinFilter, ref param);
+                GL.TexParameterI(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, ref param);
+                GL.TexParameterI(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, ref param);
 
                 ReloadImage();
             }
