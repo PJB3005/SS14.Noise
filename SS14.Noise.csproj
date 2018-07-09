@@ -52,12 +52,6 @@
     <Compile Include="src\**\*.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="src\background.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="src\test.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="src\config.toml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
