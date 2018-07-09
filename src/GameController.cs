@@ -20,13 +20,15 @@ namespace SS14.Noise
         int Texture;
         readonly Generator NoiseGenerator;
 
-        Vector2 TextureOffset = new Vector2();
+        Vector2 TextureOffset = new Vector2(0, 0);
+        float scale = 1;
         const float MOVEMENT_SPEED = 200;
 
         int UniformOffset;
+        int UniformScale;
 
 
-        public GameController() : base(800, 600,
+        public GameController() : base(800, 800,
                                        GraphicsMode.Default,
                                        "Noise!",
                                        GameWindowFlags.Default,
@@ -106,6 +108,7 @@ namespace SS14.Noise
                 GL.DeleteShader(fragmentShader);
 
                 UniformOffset = GL.GetUniformLocation(ShaderProgram, "texOffset");
+                UniformScale = GL.GetUniformLocation(ShaderProgram, "scale");
             }
 
             { 
@@ -142,6 +145,8 @@ namespace SS14.Noise
 
             GL.DeleteBuffer(VBO);
             GL.DeleteBuffer(EBO);
+        
+            GL.DeleteTexture(Texture);
         }
 
         protected override void OnRenderFrame(FrameEventArgs e)
@@ -153,11 +158,11 @@ namespace SS14.Noise
             var kb = Keyboard.GetState();
             if (kb.IsKeyDown(Key.Up))
             {
-                TextureOffset.Y += (float)e.Time * MOVEMENT_SPEED;
+                TextureOffset.Y -= (float)e.Time * MOVEMENT_SPEED;
             }
             else if (kb.IsKeyDown(Key.Down))
             {
-                TextureOffset.Y -= (float)e.Time * MOVEMENT_SPEED;
+                TextureOffset.Y += (float)e.Time * MOVEMENT_SPEED;
             }
 
             if (kb.IsKeyDown(Key.Right))
@@ -173,6 +178,7 @@ namespace SS14.Noise
             GL.ActiveTexture(TextureUnit.Texture0);
             GL.BindTexture(TextureTarget.Texture2D, Texture);
             GL.BindVertexArray(VAO);
+            GL.Uniform1(UniformScale, scale);
             GL.Uniform1(GL.GetUniformLocation(ShaderProgram, "ourTexture"), 0);
             GL.Uniform2(UniformOffset, new Vector2(TextureOffset.X / Size.Width, TextureOffset.Y / Size.Height));
             GL.DrawElements(PrimitiveType.Triangles, 6, DrawElementsType.UnsignedInt, IntPtr.Zero);
@@ -192,25 +198,34 @@ namespace SS14.Noise
 
         void ReloadImage()
         {
-            var noise = new FastNoise();
-            noise.SetFractalGain(0.3);
-            noise.SetFrequency(0.008);
-            noise.SetFractalOctaves(7);
-            noise.SetFractalType(FastNoise.FractalType.RigidMulti);
-            noise.SetNoiseType(FastNoise.NoiseType.PerlinFractal);
-            using (var bitmap = new Bitmap(800, 600))
-            {
-                for (var x = 0; x < bitmap.Width; x++)
-                    for (var y = 0; y < bitmap.Height; y++)
-                    {
-                        var val = Math.Max(0, (noise.GetNoise(x, y)+0) / 4);
-                        var col = Color.FromArgb(255, 0, 0, (int)(val * 255));
-                        bitmap.SetPixel(x, y, col);
-                    }
+            var bitmap = NoiseGenerator.FullReload(Size);
+            LoadBitmapToTexture(bitmap);
+            bitmap.Dispose();
+        }
 
-                LoadBitmapToTexture(bitmap);
+        protected override void OnKeyDown(KeyboardKeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                ReloadImage();
             }
-            //LoadImageToTexture("src/background.png");
+
+            if (e.Key == Key.Tab)
+            {
+                if (scale == 1)
+                {
+                    scale = 2;
+                }
+                else
+                {
+                    scale = 1;
+                }
+            }
+
+            if (e.Key == Key.Escape)
+            {
+                Exit();
+            }
         }
 
         void LoadImageToTexture(string path)
@@ -269,10 +284,11 @@ in vec2 uv;
 
 uniform sampler2D ourTexture;
 uniform vec2 texOffset;
+uniform float scale;
 
 void main()
 {
-    FragColor = vec4(texture(ourTexture,uv+texOffset));
+    FragColor = vec4(texture(ourTexture,uv*scale+texOffset));
 }";
     }
 }

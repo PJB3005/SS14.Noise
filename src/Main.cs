@@ -6,8 +6,6 @@ namespace SS14.Noise
     {
         public static void Main()
         {
-            Console.WriteLine("hello world!");
-
             using (var gc = new GameController())
             {
                 gc.Run(30);

@@ -1,0 +1,8 @@
+[[layers]]
+type = "noise"
+color = "#291cb2"
+seed = 10
+octaves = 3
+lacunarity = "2"
+frequency = "20"
+noise_type = "ridged"
