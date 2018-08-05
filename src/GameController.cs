@@ -29,6 +29,7 @@ namespace SS14.Noise
 
         int UniformOffset;
         int UniformScale;
+        System.Drawing.Size oldsize;
 
 
         public GameController() : base(800, 800,
@@ -67,10 +68,10 @@ namespace SS14.Noise
 
                 VBO = (uint)GL.GenBuffer();
                 EBO = (uint)GL.GenBuffer();
-                
+
                 GL.BindBuffer(BufferTarget.ArrayBuffer, VBO);
                 GL.BufferData(BufferTarget.ArrayBuffer, sizeof(float) * tri.Length, tri, BufferUsageHint.StaticDraw);
-            
+
                 var indices = new uint[]
                 {
                     0, 1, 2,
@@ -114,7 +115,7 @@ namespace SS14.Noise
                 UniformScale = GL.GetUniformLocation(ShaderProgram, "scale");
             }
 
-            { 
+            {
                 // Vertex Attribs.
                 GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, 4 * sizeof(float), 0);
                 GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, 4 * sizeof(float), sizeof(float) * 2);
@@ -148,7 +149,7 @@ namespace SS14.Noise
 
             GL.DeleteBuffer(VBO);
             GL.DeleteBuffer(EBO);
-        
+
             GL.DeleteTexture(Texture);
         }
 
@@ -157,6 +158,12 @@ namespace SS14.Noise
             base.OnRenderFrame(e);
 
             GL.Clear(ClearBufferMask.ColorBufferBit);
+
+            if (Size != oldsize)
+            {
+                ReloadImage();
+                oldsize = Size;
+            }
 
             var kb = Keyboard.GetState();
             if (kb.IsKeyDown(Key.Up))
@@ -201,6 +208,7 @@ namespace SS14.Noise
 
         void ReloadImage()
         {
+            Console.WriteLine("Reloading!");
             var bitmap = NoiseGenerator.FullReload(new Size(Size.Width, Size.Height));
             LoadBitmapToTexture(bitmap);
             bitmap.Dispose();
