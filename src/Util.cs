@@ -1,6 +1,7 @@
 using System;
 using System.Numerics;
 using OpenTK.Graphics;
+using SixLabors.ImageSharp.PixelFormats;
 
 namespace SS14.Noise
 {
@@ -109,6 +110,21 @@ namespace SS14.Noise
             // TODO: maybe setting alpha to 1 here is bad.
             // Dunno.
             return new Color4(ret.X, ret.Y, ret.Z, 1);
+        }
+
+        public static Color4 Convert(this Rgba32 color)
+        {
+            return new Color4(color.R, color.G, color.B, color.A);
+        }
+
+        public static Rgba32 Convert(this Color4 color)
+        {
+            return new Rgba32(color.R, color.G, color.B, color.A);
+        }
+
+        public static int SaneMod(int x, int m)
+        {
+            return (x % m + m) % m;
         }
     }
 
