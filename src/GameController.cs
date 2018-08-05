@@ -1,10 +1,13 @@
 using System;
-using System.Drawing;
 using System.IO;
 using OpenTK;
 using OpenTK.Input;
 using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
+using SixLabors.Primitives;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Advanced;
 
 namespace SS14.Noise
 {
@@ -198,7 +201,7 @@ namespace SS14.Noise
 
         void ReloadImage()
         {
-            var bitmap = NoiseGenerator.FullReload(Size);
+            var bitmap = NoiseGenerator.FullReload(new Size(Size.Width, Size.Height));
             LoadBitmapToTexture(bitmap);
             bitmap.Dispose();
         }
@@ -228,35 +231,27 @@ namespace SS14.Noise
             }
         }
 
-        void LoadImageToTexture(string path)
+        void LoadBitmapToTexture(Image<Rgba32> bitmap)
         {
-            using (var file = File.OpenRead(path))
-            using (var img = new Bitmap(file))
+            unsafe
             {
-                LoadBitmapToTexture(img);
+                ref var _ref = ref bitmap.DangerousGetPinnableReferenceToPixelBuffer();
+                fixed (Rgba32* ptr = &_ref)
+                {
+                    GL.BindTexture(TextureTarget.Texture2D, Texture);
+                    GL.TexImage2D(TextureTarget.Texture2D,
+                                  0,
+                                  PixelInternalFormat.Rgba,
+                                  bitmap.Width,
+                                  bitmap.Height,
+                                  0,
+                                  PixelFormat.Rgba,
+                                  PixelType.UnsignedByte,
+                                  (IntPtr)ptr);
+
+                    GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);
+                }
             }
-        }
-
-        void LoadBitmapToTexture(Bitmap bitmap)
-        {
-            var data = bitmap.LockBits(new Rectangle(0, 0, bitmap.Width, bitmap.Height),
-                        System.Drawing.Imaging.ImageLockMode.ReadOnly,
-                        System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-
-            GL.BindTexture(TextureTarget.Texture2D, Texture);
-            GL.TexImage2D(TextureTarget.Texture2D,
-                          0,
-                          PixelInternalFormat.Rgba,
-                          data.Width,
-                          data.Height,
-                          0,
-                          PixelFormat.Bgra,
-                          PixelType.UnsignedByte,
-                          data.Scan0);
-
-            GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);
-
-            bitmap.UnlockBits(data);
         }
 
         private void DebugMessage(DebugSource source, DebugType type, int id, DebugSeverity severity, int length, IntPtr message, IntPtr userParam)

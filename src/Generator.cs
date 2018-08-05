@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -8,9 +7,15 @@ using System.Threading.Tasks;
 using Nett;
 using OpenTK;
 using OpenTK.Graphics;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.Primitives;
 
 namespace SS14.Noise
 {
+    // A quick shout out to Space Scape: http://alexcpeterson.com/spacescape/
+    // I spent a lot of time looking through it's tutorials and code to create this.
+    // Because yes this is pretty much a 2D clone of space scape.
     class Generator
     {
         FastNoise Noise;
@@ -22,14 +27,9 @@ namespace SS14.Noise
             Noise = new FastNoise();
         }
 
-        public void Reload()
+        public Image<Rgba32> FullReload(Size size)
         {
-
-        }
-
-        public Bitmap FullReload(Size size)
-        {
-            var bitmap = new Bitmap(size.Width, size.Height);
+            var bitmap = new Image<Rgba32>(SixLabors.ImageSharp.Configuration.Default, size.Width, size.Height, Rgba32.Black);
 
             ReloadConfig();
             foreach (var layer in Layers)
@@ -43,7 +43,7 @@ namespace SS14.Noise
         void ReloadConfig()
         {
             Layers = new List<Layer>();
-            using (var f = File.OpenRead("src/config.toml"))
+            using (var f = File.OpenRead("../src/config.toml"))
             {
                 var table = Nett.Toml.ReadFile(f);
                 
@@ -65,23 +65,34 @@ namespace SS14.Noise
 
         abstract class Layer
         {
-            public abstract void Apply(Bitmap bitmap);
+            public abstract void Apply(Image<Rgba32> bitmap);
         }
 
         class LayerNoise : Layer
         {
-            public Color4 Color = Color4.White;
+            public Color4 InnerColor = Color4.White;
+            public Color4 OuterColor = Color4.Black;
             public RustNoise.NoiseType NoiseType = RustNoise.NoiseType.Fbm;
             public uint Seed = 1234;
             public double Persistence = 0.5;
             public double Lacunarity = Math.PI * 2 / 3;
             public double Frequency = 1;
             public uint Octaves = 3;
+            public double Threshold = 0;
+            public BlendFactor SrcFactor = BlendFactor.One;
+            public BlendFactor DstFactor = BlendFactor.One;
 
             public LayerNoise(Nett.TomlTable table)
             {
-                Color = Util.ColorFromHex(table.Get<string>("color"));
-                if (table.TryGetValue("seed", out var tomlObject))
+                if (table.TryGetValue("innercolor", out var tomlObject))
+                {
+                    InnerColor = Util.ColorFromHex(tomlObject.Get<string>());
+                }
+                if (table.TryGetValue("outercolor", out tomlObject))
+                {
+                    OuterColor = Util.ColorFromHex(tomlObject.Get<string>());
+                }
+                if (table.TryGetValue("seed", out tomlObject))
                 {
                     Seed = (uint)tomlObject.Get<int>();
                 }
@@ -101,6 +112,18 @@ namespace SS14.Noise
                 {
                     Octaves = (uint)tomlObject.Get<int>();
                 }
+                if (table.TryGetValue("threshold", out tomlObject))
+                {
+                    Threshold = double.Parse(tomlObject.Get<string>(), System.Globalization.CultureInfo.InvariantCulture);
+                }
+                if (table.TryGetValue("sourcefactor", out tomlObject))
+                {
+                    SrcFactor = (BlendFactor)Enum.Parse(typeof(BlendFactor), tomlObject.Get<string>());
+                }
+                if (table.TryGetValue("destfactor", out tomlObject))
+                {
+                    DstFactor = (BlendFactor)Enum.Parse(typeof(BlendFactor), tomlObject.Get<string>());
+                }
                 if (table.TryGetValue("noise_type", out tomlObject))
                 {
                     switch (tomlObject.Get<string>())
@@ -117,7 +140,7 @@ namespace SS14.Noise
                 }
             }
 
-            public override void Apply(Bitmap bitmap)
+            public override void Apply(Image<Rgba32> bitmap)
             {
                 var noise = new RustNoise(NoiseType);
                 noise.SetSeed(Seed);
@@ -131,15 +154,24 @@ namespace SS14.Noise
                 {
                     for (var y = 0; y < bitmap.Height; y++)
                     {
-                        var oldColor = (Color4)bitmap.GetPixel(x, y);
-                        if (x == 200 && (y == 580 || y == 20))
-                        {
-                            Console.WriteLine("yes");
-                        }
-                        var val = Math.Max(0, Math.Min(1, (float)Math.Max(0, (noise.GetNoise(x, y)+1)/2)));
-                        var col = new Color4(Color.R * val, Color.G * val, Color.B * val, 0);
-                        var o = new Color4(oldColor.R + col.R, oldColor.G + col.G, oldColor.B + col.B, 1);
-                        bitmap.SetPixel(x, y, (Color)o);
+                        var bitmapCol = bitmap[x, y];
+                        var dstColor = new Color4(bitmapCol.R, bitmapCol.G, bitmapCol.B, bitmapCol.A);
+
+                        // Do noise clauclations.
+                        var noiseVal = Math.Max(0, Math.Min(1, Math.Max(0, (noise.GetNoise(x, y)+1)/2)));
+
+                        // Threshold
+                        noiseVal = Math.Max(0, noiseVal - Threshold);
+                        noiseVal *= 1 / (1 - Threshold);
+
+                        // Get colors based on noise values.
+                        var srcColor = Util.ColorMix(OuterColor, InnerColor, (float)noiseVal);
+
+                        // Apply blending factors.
+                        var final = Util.Blend(dstColor, srcColor, DstFactor, SrcFactor);
+
+                        // Write back.
+                        bitmap[x, y] = new Rgba32(final.R, final.G, final.B, final.A);
                     }
                 }
             }

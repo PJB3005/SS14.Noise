@@ -1,3 +1,5 @@
+using System;
+using System.Numerics;
 using OpenTK.Graphics;
 
 namespace SS14.Noise
@@ -18,5 +20,109 @@ namespace SS14.Noise
 
             return new Color4(r, g, b, a);
         }
+
+        /// <summary>
+        ///     Equivalent to GLSL's mix().
+        /// </summary>
+        public static Color4 ColorMix(Color4 x, Color4 y, float bias)
+        {
+            return new Color4(x.R * (1 - y.R) + y.R * bias, x.G * (1 - y.G) + y.G * bias, x.B * (1 - y.B) + y.B * bias, x.A * (1 - y.A) + y.A * bias);
+        }
+
+        public static Color4 Blend(Color4 dstColor, Color4 srcColor, BlendFactor dstFactor, BlendFactor srcFactor)
+        {
+            var dst = new Vector3(dstColor.R, dstColor.G, dstColor.B);
+            var src = new Vector3(srcColor.R, srcColor.G, srcColor.B);
+
+            var ret = new Vector3();
+
+            switch (dstFactor)
+            {
+                case BlendFactor.Zero:
+                    break;
+                case BlendFactor.One:
+                    ret += dst;
+                    break;
+                case BlendFactor.SrcColor:
+                    ret += dst * src;
+                    break;
+                case BlendFactor.OneMinusSrcColor:
+                    ret += dst * (Vector3.One - src);
+                    break;
+                case BlendFactor.DstColor:
+                    ret += dst * dst;
+                    break;
+                case BlendFactor.OneMinusDstColor:
+                    ret += dst * (Vector3.One - dst);
+                    break;
+                case BlendFactor.SrcAlpha:
+                    ret += dst * srcColor.A;
+                    break;
+                case BlendFactor.OneMinusSrcAlpha:
+                    ret += dst * (1 - srcColor.A);
+                    break;
+                case BlendFactor.DstAlpha:
+                    ret += dst * dstColor.A;
+                    break;
+                case BlendFactor.OneMinusDstAlpha:
+                    ret += dst * (1 - dstColor.A);
+                    break;
+                default:
+                    throw new NotImplementedException();
+            }
+
+            switch (srcFactor)
+            {
+                case BlendFactor.Zero:
+                    break;
+                case BlendFactor.One:
+                    ret += src;
+                    break;
+                case BlendFactor.SrcColor:
+                    ret += src * src;
+                    break;
+                case BlendFactor.OneMinusSrcColor:
+                    ret += src * (Vector3.One - src);
+                    break;
+                case BlendFactor.DstColor:
+                    ret += src * dst;
+                    break;
+                case BlendFactor.OneMinusDstColor:
+                    ret += src * (Vector3.One - dst);
+                    break;
+                case BlendFactor.SrcAlpha:
+                    ret += src * srcColor.A;
+                    break;
+                case BlendFactor.OneMinusSrcAlpha:
+                    ret += src * (1 - srcColor.A);
+                    break;
+                case BlendFactor.DstAlpha:
+                    ret += src * dstColor.A;
+                    break;
+                case BlendFactor.OneMinusDstAlpha:
+                    ret += src * (1 - dstColor.A);
+                    break;
+                default:
+                    throw new NotImplementedException();
+            }
+
+            // TODO: maybe setting alpha to 1 here is bad.
+            // Dunno.
+            return new Color4(ret.X, ret.Y, ret.Z, 1);
+        }
+    }
+
+    public enum BlendFactor
+    {
+        Zero,
+        One,
+        SrcColor,
+        OneMinusSrcColor,
+        DstColor,
+        OneMinusDstColor,
+        SrcAlpha,
+        OneMinusSrcAlpha,
+        DstAlpha,
+        OneMinusDstAlpha,
     }
 }

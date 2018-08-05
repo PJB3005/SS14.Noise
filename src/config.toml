@@ -1,8 +1,8 @@
 [[layers]]
 type = "noise"
-color = "#291cb2"
-seed = 10
+noise_type = "fbm"
+frequency = "1.5"
+seed = 123
 octaves = 3
-lacunarity = "2"
-frequency = "20"
-noise_type = "ridged"
+innercolor = "#6719B0"
+threshold = "0.0"
