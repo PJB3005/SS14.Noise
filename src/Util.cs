@@ -26,7 +26,7 @@ namespace SS14.Noise
         /// </summary>
         public static Color4 ColorMix(Color4 x, Color4 y, float bias)
         {
-            return new Color4(x.R * (1 - y.R) + y.R * bias, x.G * (1 - y.G) + y.G * bias, x.B * (1 - y.B) + y.B * bias, x.A * (1 - y.A) + y.A * bias);
+            return new Color4(x.R * (1 - bias) + y.R * bias, x.G * (1 - bias) + y.G * bias, x.B * (1 - bias) + y.B * bias, x.A * (1 - bias) + y.A * bias);
         }
 
         public static Color4 Blend(Color4 dstColor, Color4 srcColor, BlendFactor dstFactor, BlendFactor srcFactor)
