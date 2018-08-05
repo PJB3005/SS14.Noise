@@ -46,7 +46,7 @@ namespace SS14.Noise
             using (var f = File.OpenRead("../src/config.toml"))
             {
                 var table = Nett.Toml.ReadFile(f);
-                
+
                 foreach (var layer in table.Get<TomlTableArray>("layers").Items.Select(t => t.Get<TomlTable>()))
                 {
                     switch (layer.Get<string>("type"))
@@ -158,7 +158,7 @@ namespace SS14.Noise
                         var dstColor = new Color4(bitmapCol.R, bitmapCol.G, bitmapCol.B, bitmapCol.A);
 
                         // Do noise clauclations.
-                        var noiseVal = Math.Max(0, Math.Min(1, Math.Max(0, (noise.GetNoise(x, y)+1)/2)));
+                        var noiseVal = Math.Max(0, Math.Min(1, Math.Max(0, (noise.GetNoise(x, y) + 1) / 2)));
 
                         // Threshold
                         noiseVal = Math.Max(0, noiseVal - Threshold);
