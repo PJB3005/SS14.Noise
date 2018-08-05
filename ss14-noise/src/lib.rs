@@ -1,7 +1,7 @@
 extern crate noise;
 
+use noise::{Fbm, MultiFractal, NoiseFn, Point2, Point4, RidgedMulti, Seedable};
 use std::mem;
-use noise::{Fbm, NoiseFn, RidgedMulti, Point2, Point4, Seedable, MultiFractal};
 
 pub struct NoiseGenerator {
     pub period_x: f64,
@@ -15,11 +15,11 @@ impl NoiseGenerator {
             NoiseType::Fbm(ref mut fbm) => {
                 let mut repl = fbm.clone().set_frequency(frequency);
                 mem::swap(fbm, &mut repl)
-            },
+            }
             NoiseType::Ridged(ref mut ridged) => {
                 let mut repl = ridged.clone().set_frequency(frequency);
                 mem::swap(ridged, &mut repl)
-            },
+            }
         }
     }
 
@@ -28,11 +28,11 @@ impl NoiseGenerator {
             NoiseType::Fbm(ref mut fbm) => {
                 let mut repl = fbm.clone().set_lacunarity(lacunarity);
                 mem::swap(fbm, &mut repl)
-            },
+            }
             NoiseType::Ridged(ref mut ridged) => {
                 let mut repl = ridged.clone().set_lacunarity(lacunarity);
                 mem::swap(ridged, &mut repl)
-            },
+            }
         }
     }
 
@@ -41,11 +41,11 @@ impl NoiseGenerator {
             NoiseType::Fbm(ref mut fbm) => {
                 let mut repl = fbm.clone().set_persistence(persistence);
                 mem::swap(fbm, &mut repl)
-            },
+            }
             NoiseType::Ridged(ref mut ridged) => {
                 let mut repl = ridged.clone().set_persistence(persistence);
                 mem::swap(ridged, &mut repl)
-            },
+            }
         }
     }
 
@@ -54,11 +54,11 @@ impl NoiseGenerator {
             NoiseType::Fbm(ref mut fbm) => {
                 let mut repl = fbm.clone().set_octaves(octaves);
                 mem::swap(fbm, &mut repl)
-            },
+            }
             NoiseType::Ridged(ref mut ridged) => {
                 let mut repl = ridged.clone().set_octaves(octaves);
                 mem::swap(ridged, &mut repl)
-            },
+            }
         }
     }
 
@@ -67,11 +67,11 @@ impl NoiseGenerator {
             NoiseType::Fbm(ref mut fbm) => {
                 let mut repl = fbm.clone().set_seed(seed);
                 mem::swap(fbm, &mut repl)
-            },
+            }
             NoiseType::Ridged(ref mut ridged) => {
                 let mut repl = ridged.clone().set_seed(seed);
                 mem::swap(ridged, &mut repl)
-            },
+            }
         }
     }
 }
@@ -96,18 +96,17 @@ impl NoiseType {
             0 => {
                 let fbm = Fbm::new();
                 NoiseType::Fbm(fbm)
-            },
+            }
             1 => {
                 let ridged = RidgedMulti::new();
                 NoiseType::Ridged(ridged)
-            },
+            }
             _ => {
                 panic!("Invalid type code.");
             }
         }
     }
 }
-
 
 #[repr(C)]
 pub struct Vec4 {
