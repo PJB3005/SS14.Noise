@@ -84,6 +84,7 @@ namespace SS14.Noise
             public double Frequency = 1;
             public uint Octaves = 3;
             public double Threshold = 0;
+            public double Power = 1;
             public BlendFactor SrcFactor = BlendFactor.One;
             public BlendFactor DstFactor = BlendFactor.One;
 
@@ -129,6 +130,10 @@ namespace SS14.Noise
                 {
                     DstFactor = (BlendFactor)Enum.Parse(typeof(BlendFactor), tomlObject.Get<string>());
                 }
+                if (table.TryGetValue("power", out tomlObject))
+                {
+                    Power = double.Parse(tomlObject.Get<string>(), System.Globalization.CultureInfo.InvariantCulture);
+                }
                 if (table.TryGetValue("noise_type", out tomlObject))
                 {
                     switch (tomlObject.Get<string>())
@@ -155,6 +160,8 @@ namespace SS14.Noise
                 noise.SetOctaves(Octaves);
                 noise.SetPeriodX(bitmap.Width);
                 noise.SetPeriodY(bitmap.Height);
+                var threshVal = 1 / (1 - Threshold);
+                var powFactor = 1 / Power;
                 for (var x = 0; x < bitmap.Width; x++)
                 {
                     for (var y = 0; y < bitmap.Height; y++)
@@ -164,7 +171,8 @@ namespace SS14.Noise
 
                         // Threshold
                         noiseVal = Math.Max(0, noiseVal - Threshold);
-                        noiseVal *= 1 / (1 - Threshold);
+                        noiseVal *= threshVal;
+                        noiseVal = Math.Pow(noiseVal, powFactor);
 
                         // Get colors based on noise values.
                         var srcColor = Util.ColorMix(OuterColor, InnerColor, (float)noiseVal);
@@ -198,6 +206,7 @@ namespace SS14.Noise
             public uint MaskOctaves = 3;
             public double MaskThreshold = 0;
             public int PointSize = 1;
+            public double MaskPower = 1;
 
 
             public LayerPoints(Nett.TomlTable table)
@@ -278,6 +287,10 @@ namespace SS14.Noise
                             throw new InvalidOperationException();
                     }
                 }
+                if (table.TryGetValue("maskpower", out tomlObject))
+                {
+                    MaskPower = double.Parse(tomlObject.Get<string>(), System.Globalization.CultureInfo.InvariantCulture);
+                }
             }
 
             public override void Apply(Image<Rgba32> bitmap)
@@ -346,6 +359,9 @@ namespace SS14.Noise
                 noise.SetPeriodX(buffer.Width);
                 noise.SetPeriodY(buffer.Height);
 
+                var threshVal = 1 / (1 - MaskThreshold);
+                var powFactor = 1 / MaskPower;
+
                 const int MaxPointAttemptCount = 999;
                 int PointAttemptCount = 0;
 
@@ -361,7 +377,8 @@ namespace SS14.Noise
                     var noiseVal = Math.Min(1, Math.Max(0, (noise.GetNoise(x, y) + 1) / 2));
                     // Threshold
                     noiseVal = Math.Max(0, noiseVal - MaskThreshold);
-                    noiseVal *= 1 / (1 - MaskThreshold);
+                    noiseVal *= threshVal;
+                    noiseVal = Math.Pow(noiseVal, powFactor);
 
                     var randomThresh = random.NextDouble();
                     if (randomThresh > noiseVal)
