@@ -32,7 +32,7 @@ namespace SS14.Noise
         System.Drawing.Size oldsize;
 
 
-        public GameController() : base(800, 800,
+        public GameController() : base(960, 960,
                                        GraphicsMode.Default,
                                        "Noise!",
                                        GameWindowFlags.Default,
@@ -212,6 +212,7 @@ namespace SS14.Noise
             var bitmap = NoiseGenerator.FullReload(new Size(Size.Width, Size.Height));
             LoadBitmapToTexture(bitmap);
             bitmap.Dispose();
+            Console.WriteLine("Reload complete!");
         }
 
         protected override void OnKeyDown(KeyboardKeyEventArgs e)

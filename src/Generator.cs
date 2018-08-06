@@ -29,11 +29,21 @@ namespace SS14.Noise
 
         public Image<Rgba32> FullReload(Size size)
         {
-            var bitmap = new Image<Rgba32>(SixLabors.ImageSharp.Configuration.Default, size.Width, size.Height, Rgba32.Black);
 
-            ReloadConfig();
+            try
+            {
+                ReloadConfig();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("EXCEPTION WHILE RELOADING:{0}", e);
+                return new Image<Rgba32>(SixLabors.ImageSharp.Configuration.Default, size.Width, size.Height, Rgba32.LimeGreen);
+            }
+            var bitmap = new Image<Rgba32>(SixLabors.ImageSharp.Configuration.Default, size.Width, size.Height, Rgba32.Black);
+            int count = 0;
             foreach (var layer in Layers)
             {
+                Console.WriteLine("Layer {0} done", count++);
                 layer.Apply(bitmap);
             }
 
@@ -176,6 +186,7 @@ namespace SS14.Noise
 
                         // Get colors based on noise values.
                         var srcColor = Util.ColorMix(OuterColor, InnerColor, (float)noiseVal);
+                        srcColor.A = (float)noiseVal;
 
                         // Apply blending factors & write back.
                         var dstColor = bitmap[x, y].Convert();
@@ -335,9 +346,9 @@ namespace SS14.Noise
 
                     var dist = random.NextDouble();
 
-                    for (int ox = x - o; ox < x + o; ox++)
+                    for (int ox = x - o; ox <= x + o; ox++)
                     {
-                        for (int oy = y - o; oy < y + o; oy++)
+                        for (int oy = y - o; oy <= y + o; oy++)
                         {
                             var color = Util.ColorMix(CloseColor, FarColor, (float)dist).Convert();
                             buffer[Util.SaneMod(ox, buffer.Width), Util.SaneMod(oy, buffer.Width)] = color;
@@ -362,7 +373,7 @@ namespace SS14.Noise
                 var threshVal = 1 / (1 - MaskThreshold);
                 var powFactor = 1 / MaskPower;
 
-                const int MaxPointAttemptCount = 999;
+                const int MaxPointAttemptCount = 9999;
                 int PointAttemptCount = 0;
 
                 for (int i = 0; i < PointCount; i++)
