@@ -40,6 +40,7 @@ namespace SS14.Noise
                                        3, 3, GraphicsContextFlags.Default)
         {
             NoiseGenerator = new Generator();
+            oldsize = Size;
         }
 
         protected override void OnLoad(EventArgs e)
@@ -208,11 +209,13 @@ namespace SS14.Noise
 
         void ReloadImage()
         {
+            var time = DateTime.Now;
             Console.WriteLine("Reloading!");
             var bitmap = NoiseGenerator.FullReload(new Size(Size.Width, Size.Height));
             LoadBitmapToTexture(bitmap);
             bitmap.Dispose();
-            Console.WriteLine("Reload complete!");
+            var delta = DateTime.Now - time;
+            Console.WriteLine("Reload completed in {0} seconds!", delta.TotalSeconds);
         }
 
         protected override void OnKeyDown(KeyboardKeyEventArgs e)

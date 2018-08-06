@@ -2,14 +2,10 @@ using System;
 using System.Runtime.InteropServices;
 using OpenTK;
 
-// Tiling 2D noise implementation taken from https://www.gamedev.net/blogs/entry/2138456-seamless-noise/
-
 namespace SS14.Noise
 {
     public sealed class RustNoise : IDisposable
     {
-        public const double TAU = Math.PI * 2;
-
         private IntPtr NoiseGenerator;
 
         public RustNoise(NoiseType type)

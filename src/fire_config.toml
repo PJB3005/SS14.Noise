@@ -1,0 +1,26 @@
+[[layers]]
+# Fire Nebula
+type = "noise"
+innercolor = "#FF0000"
+outercolor = "#AA0000"
+noise_type = "ridged"
+octaves = 6
+sourcefactor = "SrcAlpha"
+threshold = "0.35"
+lacunarity = "2.4"
+power = "0.35"
+frequency = "0.60"
+
+
+[[layers]]
+# Fire Nebula Cores.
+type = "noise"
+innercolor = "#FFFF00"
+outercolor = "#000000"
+noise_type = "ridged"
+octaves = 6
+sourcefactor = "SrcAlpha"
+threshold = "0.55"
+lacunarity = "2.4"
+power = "0.35"
+frequency = "0.55"

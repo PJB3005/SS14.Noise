@@ -43,8 +43,8 @@ namespace SS14.Noise
             int count = 0;
             foreach (var layer in Layers)
             {
-                Console.WriteLine("Layer {0} done", count++);
                 layer.Apply(bitmap);
+                Console.WriteLine("Layer {0} done", count++);
             }
 
             return bitmap;
